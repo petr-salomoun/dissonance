@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.swp
+*.swo
+.DS_Store
+results/
+/out.wav
+/ab_session_*.json
+/tmp/
+*.mp3
