@@ -89,7 +89,19 @@ Each synthesis method has knobs: carrier frequency, number of partials, AM rate,
 | AM energy at 70 Hz | strength of roughness-rate modulation |
 | roughness × sharpness | interaction (rough *and* sharp is worse than either alone) |
 
-The search runs in two phases. First, a wide random sample across the full parameter space to find promising regions. Then a local hill-climb from the top candidates, nudging each parameter and keeping mutations that improve the score.
+The search runs in two phases: seeded random sampling across the full parameter space, then coordinate-descent hill climbing from the top seeds.
+
+Practical default:
+
+```bash
+dissonance sweep --seed 42
+```
+
+Current sweep defaults: `--samples 200`, `--top-k 5`, `--hill-climb-iters 3`, `--duration 2.0`, `--sr 22050`, `--temporal-min-active 0`, `--temporal-max-active 3`, `--temporal-activation-p 0.45`.
+
+Temporal diversity is controlled by named layers (`scream_chaos`, `dread_swell`, `shepard_ascent`, `pulse_panic`, `doom_throb`, `wobble_drift`, `uncanny_morph`). By default the sampler activates 0–3 of these per candidate; tune that window with the `--temporal-*` flags.
+
+Sweep outputs are saved as WAV + `.json` result pairs, and each rendered WAV also gets a `.params.json` sidecar with full layer/global metadata.
 
 ---
 
@@ -136,9 +148,29 @@ What each layer contributes in the winning presets:
 
 The scoring weights reflect one reasonable guess at what humans find unpleasant. Yours may differ.
 
-The toolkit includes a pairwise listening test mode: two candidates are played back-to-back and you indicate which sounds worse. Your judgments are fit to a Bradley-Terry ranking model, and the resulting latent scores are regressed onto the acoustic features to yield updated weights. Ridge regularization and prior blending keep the weights stable across sessions, and all historical comparisons accumulate so the weights converge over time rather than jumping per-batch.
+The toolkit includes a pairwise listening test mode: two candidates are played back-to-back and you indicate which sounds worse. Your judgments are fit to a Bradley-Terry ranking model, then regressed onto acoustic + sidecar-derived synth features. Ridge regularization, prior blending, coverage states (`identified`, `pending_contrast`, `pending_variance`), and accumulated comparisons keep the weights stable across sessions.
 
 The optimizer can pause mid-sweep every N samples, run a mini listening session on the current top candidates, update the weights, and continue — so the search adapts to your preferences as it runs.
+
+Run periodic calibration like this:
+
+```bash
+dissonance sweep --seed 42 --ab-interval 20 --ab-pairs 6 --ab-no-play
+```
+
+Generate deterministic A/B candidates separately with:
+
+```bash
+dissonance ab-candidates --seed 42 --out-dir ./ab_candidates
+```
+
+Defaults: `--duration 2.0`, `--sr 22050`, `--repeats 1`, `--seed 42`. Each WAV is written with a matching `.params.json` sidecar.
+
+Then compare them with the standalone tool using `--wavs`:
+
+```bash
+python abtool.py --wavs ./ab_candidates/*.wav --pairs 10 --seed 42 --no-play
+```
 
 ---
 

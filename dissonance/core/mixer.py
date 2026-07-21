@@ -5,7 +5,21 @@ from __future__ import annotations
 import numpy as np
 
 from dissonance.core.dsp.filters import boost_2_4khz, highpass
-from dissonance.core.synth import beating, fm_instab, inharmonic, noise_shaped, rough, stickslip
+from dissonance.core.synth import (
+    beating,
+    doom_throb,
+    dread_swell,
+    fm_instab,
+    inharmonic,
+    noise_shaped,
+    pulse_panic,
+    rough,
+    scream_chaos,
+    shepard_ascent,
+    stickslip,
+    uncanny_morph,
+    wobble_drift,
+)
 
 
 def mix(layers: list[dict], sr: int, duration_s: float, global_params: dict) -> np.ndarray:
@@ -22,7 +36,15 @@ def mix(layers: list[dict], sr: int, duration_s: float, global_params: dict) -> 
         "inharmonic": inharmonic.render,
         "beating": beating.render,
         "noise_shaped": noise_shaped.render,
+        "scream_chaos": scream_chaos.render,
+        "dread_swell": dread_swell.render,
+        "shepard_ascent": shepard_ascent.render,
+        "pulse_panic": pulse_panic.render,
+        "doom_throb": doom_throb.render,
+        "wobble_drift": wobble_drift.render,
+        "uncanny_morph": uncanny_morph.render,
     }
+    rms_target = np.float32(10.0 ** (-18.0 / 20.0))
 
     y = np.zeros(n, dtype=np.float32)
     for layer in layers or []:
@@ -37,7 +59,13 @@ def mix(layers: list[dict], sr: int, duration_s: float, global_params: dict) -> 
                 layer_sig = layer_sig[:n]
             else:
                 layer_sig = np.pad(layer_sig, (0, n - layer_sig.shape[0]))
-        y += np.asarray(layer_sig, dtype=np.float32)
+        layer_sig = np.asarray(layer_sig, dtype=np.float32)
+        rms = float(np.sqrt(np.mean(layer_sig * layer_sig, dtype=np.float64)))
+        if rms > 1e-8:
+            layer_sig = layer_sig * (rms_target / np.float32(rms))
+        gain_db = float(layer.get("gain_db", 0.0))
+        layer_sig *= np.float32(10.0 ** (gain_db / 20.0))
+        y += layer_sig
 
     y = highpass(y, sr=sr, cutoff_hz=highpass_hz)
     y = boost_2_4khz(y, sr=sr, gain_db=hump_2_4khz_db)

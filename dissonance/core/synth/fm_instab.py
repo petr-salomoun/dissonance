@@ -17,7 +17,6 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     mod_rate_hz = float(params.get("mod_rate_hz", 12.0))
     mod_index = float(params.get("mod_index", 8.0))
     mod_chaos = float(np.clip(params.get("mod_chaos", 0.7), 0.0, 1.0))
-    gain_db = float(params.get("gain_db", -9.0))
 
     t = np.arange(n, dtype=np.float32) / np.float32(sr)
 
@@ -34,9 +33,4 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
 
     cumulative_mod_phase = 2.0 * np.pi * np.cumsum(modulator_hz, dtype=np.float64) / float(sr)
     y = np.sin(2.0 * np.pi * np.float32(carrier_hz) * t + np.float32(mod_index) * cumulative_mod_phase).astype(np.float32)
-    y *= np.float32(10.0 ** (gain_db / 20.0))
-
-    peak = float(np.max(np.abs(y)))
-    if peak > 0.0:
-        y /= np.float32(peak)
     return y.astype(np.float32)

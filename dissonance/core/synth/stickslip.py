@@ -18,7 +18,6 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     ioi_jitter = float(params.get("ioi_jitter", 0.6))
     impulse_decay_ms = float(params.get("impulse_decay_ms", 1.5))
     resonance_hz = params.get("resonance_hz", [2400.0, 3300.0, 4100.0])
-    gain_db = float(params.get("gain_db", -3.0))
 
     if not isinstance(resonance_hz, (list, tuple, np.ndarray)):
         resonance_hz = [float(resonance_hz)]
@@ -48,9 +47,4 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
         y += bandpass(noise, sr=sr, low_hz=low, high_hz=high)
 
     y *= env
-    y *= np.float32(10.0 ** (gain_db / 20.0))
-
-    peak = float(np.max(np.abs(y)))
-    if peak > 0.0:
-        y /= np.float32(peak)
     return y.astype(np.float32)

@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import soundfile as sf
 
-from abtool import run_ab_session
+from abtool import FEATURE_NAMES, _feature_vector, run_ab_session
 from dissonance.analysis.scorer import UnpleasantnessScorer
 from dissonance.core.mixer import mix
 
@@ -71,9 +71,84 @@ NOISE_SHAPED_SPACE: dict[str, list[Any]] = {
     "modulation_depth": [0.4, 0.6, 0.8, 1.0],
 }
 
+SCREAM_CHAOS_SPACE: dict[str, list[Any]] = {
+    "carrier_hz": [500, 700, 900, 1200],
+    "subharmonic_gain": [0.2, 0.4, 0.6, 0.8],
+    "chaos_amount": [0.3, 0.5, 0.7, 0.9],
+    "pitch_jump_rate_hz": [0.2, 0.5, 0.8, 1.2],
+    "biphonation_ratio": [1.31, 1.52, 1.67, 1.83],
+    "biphonation_gain": [0.1, 0.2, 0.3, 0.5],
+}
+
+DREAD_SWELL_SPACE: dict[str, list[Any]] = {
+    "start_hz": [120, 160, 200, 260],
+    "end_hz": [900, 1200, 1600, 2200],
+    "rise_shape": ["linear", "exponential"],
+    "roughness_rise": [True, False],
+    "loudness_rise": [True, False],
+}
+
+SHEPARD_ASCENT_SPACE: dict[str, list[Any]] = {
+    "n_voices": [6, 8, 10, 12],
+    "octave_spread": [3.0, 4.0, 5.0],
+    "rise_rate_hz_per_s": [0.25, 0.5, 0.75],
+    "roughness_am_hz": [0.0, 20.0, 40.0, 70.0],
+}
+
+PULSE_PANIC_SPACE: dict[str, list[Any]] = {
+    "start_rate_hz": [0.5, 1.0, 2.0],
+    "end_rate_hz": [5.0, 8.0, 12.0],
+    "acceleration": ["linear", "exponential"],
+    "roughness_am_hz": [30.0, 50.0, 70.0, 90.0],
+    "burst_decay_ms": [5.0, 8.0, 12.0, 20.0],
+}
+
+DOOM_THROB_SPACE: dict[str, list[Any]] = {
+    "center_hz": [20.0, 30.0, 40.0, 60.0],
+    "detune_hz_start": [0.2, 0.5, 1.0],
+    "detune_hz_end": [1.5, 3.0, 4.5, 6.0],
+    "am_rate_hz": [0.15, 0.3, 0.5],
+}
+
+WOBBLE_DRIFT_SPACE: dict[str, list[Any]] = {
+    "base_hz": [120.0, 200.0, 300.0, 500.0],
+    "detune_start_hz": [0.1, 0.5, 1.0],
+    "detune_end_hz": [6.0, 12.0, 20.0, 30.0],
+    "drift_shape": ["linear", "exponential"],
+    "n_harmonics": [2, 4, 6, 8],
+}
+
+UNCANNY_MORPH_SPACE: dict[str, list[Any]] = {
+    "base_hz": [120.0, 200.0, 300.0],
+    "n_partials": [8, 12, 16, 20],
+    "inharmonicity_start": [0.0, 0.02, 0.05],
+    "inharmonicity_end": [0.1, 0.2, 0.3, 0.4],
+    "formant_sweep": [True, False],
+}
+
 GLOBAL_SPACE: dict[str, list[Any]] = {
     "hump_2_4khz_db": [6, 9, 12, 15],
     "highpass_hz": [400, 800, 1200],
+}
+
+TEMPORAL_GROUPS: tuple[str, ...] = (
+    "scream_chaos",
+    "dread_swell",
+    "shepard_ascent",
+    "pulse_panic",
+    "doom_throb",
+    "wobble_drift",
+    "uncanny_morph",
+)
+
+TEMPORAL_LAYER_GAINS: dict[str, float] = {
+    "scream_chaos": -8.0,
+    "dread_swell": -8.0,
+    "shepard_ascent": -10.0,
+    "pulse_panic": -9.0,
+    "doom_throb": -6.0,
+    "wobble_drift": -8.0,
+    "uncanny_morph": -9.0,
 }
 
 
@@ -116,7 +191,24 @@ def build_layers(params: dict[str, Any]) -> list[dict[str, Any]]:
     inharmonic = {"type": "inharmonic", "gain_db": -9.0, **params["inharmonic"]}
     beating = {"type": "beating", "gain_db": -6.0, **params["beating"]}
     noise_shaped = {"type": "noise_shaped", "gain_db": -12.0, **params["noise_shaped"]}
-    return [rough, stickslip, fm_instab, inharmonic, beating, noise_shaped]
+    layers = [
+        rough,
+        stickslip,
+        fm_instab,
+        inharmonic,
+        beating,
+        noise_shaped,
+    ]
+    for temporal_group in TEMPORAL_GROUPS:
+        group_params = params.get(temporal_group)
+        if not isinstance(group_params, dict):
+            continue
+        layers.append({
+            "type": temporal_group,
+            "gain_db": float(TEMPORAL_LAYER_GAINS[temporal_group]),
+            **group_params,
+        })
+    return layers
 
 
 def evaluate_params(
@@ -135,7 +227,7 @@ def evaluate_params(
             global_params=params["global"],
         )
         _scorer = scorer if scorer is not None else UnpleasantnessScorer()
-        score, features = _scorer.score(signal, sr)
+        score, features = _scorer.score(signal, sr, layers=layers, duration_s=duration_s)
         return EvalResult(float(score), params, dict(features))
     except Exception:
         return EvalResult(0.0, params, {})
@@ -147,29 +239,174 @@ def evaluate_worker(task: tuple[dict[str, Any], int, float]) -> EvalResult:
     return evaluate_params(params=params, sr=sr, duration_s=duration_s)
 
 
-def sample_one(rng: np.random.Generator) -> dict[str, Any]:
-    """Sample one parameter combination uniformly from discrete search space."""
-    def _sample_group(space: dict[str, list[Any]]) -> dict[str, Any]:
-        out: dict[str, Any] = {}
-        for k, v in space.items():
-            val = rng.choice(v)
-            out[k] = copy.deepcopy(val.item() if isinstance(val, np.generic) else val)
-        return out
+def _sample_group(rng: np.random.Generator, space: dict[str, list[Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for k, v in space.items():
+        val = rng.choice(v)
+        out[k] = copy.deepcopy(val.item() if isinstance(val, np.generic) else val)
+    return out
 
-    return {
-        "rough": _sample_group(ROUGH_SPACE),
-        "stickslip": _sample_group(STICKSLIP_SPACE),
-        "fm_instab": _sample_group(FM_INSTAB_SPACE),
-        "inharmonic": _sample_group(INHARMONIC_SPACE),
-        "beating": _sample_group(BEATING_SPACE),
-        "noise_shaped": _sample_group(NOISE_SHAPED_SPACE),
-        "global": _sample_group(GLOBAL_SPACE),
+
+def _sample_active_temporal_groups(
+    rng: np.random.Generator,
+    min_active: int,
+    max_active: int,
+    activation_p: float,
+) -> list[str]:
+    groups = list(TEMPORAL_GROUPS)
+    n_groups = len(groups)
+    lo = max(0, min(int(min_active), n_groups))
+    hi = max(lo, min(int(max_active), n_groups))
+    p = float(np.clip(float(activation_p), 0.0, 1.0))
+
+    active = [g for g in groups if rng.random() < p]
+    inactive = [g for g in groups if g not in active]
+
+    if len(active) < lo and inactive:
+        need = lo - len(active)
+        add_idx = rng.permutation(len(inactive))[:need]
+        active.extend(inactive[int(i)] for i in add_idx)
+    if len(active) > hi:
+        keep_idx = rng.permutation(len(active))[:hi]
+        active = [active[int(i)] for i in keep_idx]
+    return sorted(active)
+
+
+def sample_one(
+    rng: np.random.Generator,
+    temporal_min_active: int = 0,
+    temporal_max_active: int = 3,
+    temporal_activation_p: float = 0.45,
+) -> dict[str, Any]:
+    """Sample one parameter combination uniformly from discrete search space."""
+    sampled = {
+        "rough": _sample_group(rng, ROUGH_SPACE),
+        "stickslip": _sample_group(rng, STICKSLIP_SPACE),
+        "fm_instab": _sample_group(rng, FM_INSTAB_SPACE),
+        "inharmonic": _sample_group(rng, INHARMONIC_SPACE),
+        "beating": _sample_group(rng, BEATING_SPACE),
+        "noise_shaped": _sample_group(rng, NOISE_SHAPED_SPACE),
+        "global": _sample_group(rng, GLOBAL_SPACE),
     }
+    temporal_spaces: dict[str, dict[str, list[Any]]] = {
+        "scream_chaos": SCREAM_CHAOS_SPACE,
+        "dread_swell": DREAD_SWELL_SPACE,
+        "shepard_ascent": SHEPARD_ASCENT_SPACE,
+        "pulse_panic": PULSE_PANIC_SPACE,
+        "doom_throb": DOOM_THROB_SPACE,
+        "wobble_drift": WOBBLE_DRIFT_SPACE,
+        "uncanny_morph": UNCANNY_MORPH_SPACE,
+    }
+    active_temporal = _sample_active_temporal_groups(
+        rng=rng,
+        min_active=temporal_min_active,
+        max_active=temporal_max_active,
+        activation_p=temporal_activation_p,
+    )
+    for group in active_temporal:
+        sampled[group] = _sample_group(rng, temporal_spaces[group])
+    return sampled
 
 
 def format_score_line(done: int, total: int, score: float, best: float) -> str:
     """Format progress line."""
     return f"[{done:4d}/{total}] score={score:.3f}  best={best:.3f}"
+
+
+def _select_ab_probe_indices(
+    results: list[EvalResult],
+    scorer: UnpleasantnessScorer,
+    rng: np.random.Generator,
+    pick_count: int = 6,
+) -> list[int]:
+    if len(results) <= pick_count:
+        return list(range(len(results)))
+
+    top_pool = min(len(results), max(48, pick_count * 10))
+    pool = results[:top_pool]
+    feats = np.vstack([_feature_vector(r.features) for r in pool])
+    stds = np.std(feats, axis=0)
+    active_idx = np.where(stds > 1e-3)[0]
+    if active_idx.size == 0:
+        return list(range(min(pick_count, len(pool))))
+
+    z = feats[:, active_idx]
+    z = (z - np.mean(z, axis=0)) / np.maximum(np.std(z, axis=0), 1e-3)
+
+    uncertainty = np.zeros(len(pool), dtype=np.float64)
+    pending_synth: list[str] = []
+    model = getattr(scorer, "preference_model", None)
+    if isinstance(model, dict) and isinstance(model.get("beta_std"), dict):
+        beta_map = model["beta_std"]
+        beta = np.array([float(beta_map.get(FEATURE_NAMES[i], 0.0)) for i in active_idx], dtype=np.float64)
+        logits = z @ beta
+        probs = 1.0 / (1.0 + np.exp(-np.clip(logits, -12.0, 12.0)))
+        uncertainty = 1.0 - np.abs(probs - 0.5) * 2.0
+        coverage = model.get("feature_coverage")
+        if isinstance(coverage, dict):
+            pending_ranked: list[tuple[int, str]] = []
+            for name in UnpleasantnessScorer.SYNTH_FEATURE_NAMES:
+                meta = coverage.get(name)
+                if not isinstance(meta, dict):
+                    continue
+                if str(meta.get("status", "")) == "identified":
+                    continue
+                contrast_count = int(meta.get("contrast_count", 0))
+                pending_ranked.append((contrast_count, name))
+            pending_ranked.sort(key=lambda x: x[0])
+            pending_synth = [name for _, name in pending_ranked]
+
+    selected: list[int] = [0]
+    if pending_synth:
+        used = set(selected)
+        score_vals = np.array([float(r.score) for r in pool], dtype=np.float64)
+        denom = max(float(np.std(score_vals)), 1e-6)
+        score_z = (score_vals - float(np.mean(score_vals))) / denom
+        for synth_name in pending_synth:
+            if len(selected) >= min(pick_count, len(pool)):
+                break
+            if synth_name not in UnpleasantnessScorer.SYNTH_FEATURE_NAMES:
+                continue
+            hi_i = -1
+            hi_val = -1e12
+            lo_i = -1
+            lo_val = 1e12
+            for i, res in enumerate(pool):
+                if i in used:
+                    continue
+                v = float(res.features.get(synth_name, 0.0))
+                merit_hi = v + 0.08 * float(score_z[i]) + 0.04 * float(uncertainty[i])
+                merit_lo = v - 0.08 * float(score_z[i])
+                if merit_hi > hi_val:
+                    hi_val = merit_hi
+                    hi_i = i
+                if merit_lo < lo_val:
+                    lo_val = merit_lo
+                    lo_i = i
+            if hi_i >= 0:
+                selected.append(hi_i)
+                used.add(hi_i)
+            if len(selected) >= min(pick_count, len(pool)):
+                break
+            if lo_i >= 0 and lo_i not in used:
+                selected.append(lo_i)
+                used.add(lo_i)
+
+    while len(selected) < min(pick_count, len(pool)):
+        best_i = -1
+        best_score = -1e12
+        for i in range(len(pool)):
+            if i in selected:
+                continue
+            min_dist = min(float(np.linalg.norm(z[i] - z[j])) for j in selected)
+            score = min_dist + 0.35 * float(uncertainty[i]) + 0.05 * float(rng.random())
+            if score > best_score:
+                best_score = score
+                best_i = i
+        if best_i < 0:
+            break
+        selected.append(best_i)
+    return selected
 
 
 def print_top_results(results: list[EvalResult], count: int = 5) -> None:
@@ -197,6 +434,9 @@ def phase1_random_sampling(
     duration_s: float,
     workers: int,
     seed: int,
+    temporal_min_active: int = 0,
+    temporal_max_active: int = 3,
+    temporal_activation_p: float = 0.45,
     ab_interval: int = 0,
     ab_pairs: int = 6,
     ab_no_play: bool = False,
@@ -210,8 +450,20 @@ def phase1_random_sampling(
     done = 0
     scorer = UnpleasantnessScorer()
 
+    def _sample_task() -> tuple[dict[str, Any], int, float]:
+        return (
+            sample_one(
+                rng,
+                temporal_min_active=temporal_min_active,
+                temporal_max_active=temporal_max_active,
+                temporal_activation_p=temporal_activation_p,
+            ),
+            sr,
+            duration_s,
+        )
+
     if ab_interval <= 0:
-        tasks = [(sample_one(rng), sr, duration_s) for _ in range(samples)]
+        tasks = [_sample_task() for _ in range(samples)]
 
         with ProcessPoolExecutor(max_workers=workers, initializer=init_worker, initargs=(seed,)) as ex:
             futs = [ex.submit(evaluate_worker, task) for task in tasks]
@@ -236,7 +488,7 @@ def phase1_random_sampling(
         batch_size = min(ab_interval, samples - done)
         if batch_size <= 0:
             break
-        batch_tasks = [(sample_one(rng), sr, duration_s) for _ in range(batch_size)]
+        batch_tasks = [_sample_task() for _ in range(batch_size)]
 
         with ProcessPoolExecutor(max_workers=workers, initializer=init_worker, initargs=(seed,)) as ex:
             futs = [ex.submit(evaluate_worker, task) for task in batch_tasks]
@@ -254,17 +506,19 @@ def phase1_random_sampling(
         if ab_tmp_dir is None:
             continue
 
-        topn = min(3, len(results))
+        probe_indices = _select_ab_probe_indices(results, scorer=scorer, rng=rng, pick_count=6)
+        topn = len(probe_indices)
         if topn < 2:
             continue
         ab_tmp_dir.mkdir(parents=True, exist_ok=True)
         wavs: list[Path] = []
-        for rank in range(topn):
-            wav = ab_tmp_dir / f"batch{batch_idx + 1:03d}_top{rank + 1}.wav"
-            render_result(results[rank].params, out_wav=wav, sr=sr, duration_s=duration_s)
+        for rank, res_idx in enumerate(probe_indices, start=1):
+            wav = ab_tmp_dir / f"batch{batch_idx + 1:03d}_probe{rank:02d}.wav"
+            render_result(results[res_idx].params, out_wav=wav, sr=sr, duration_s=duration_s)
+            write_params_sidecar(results[res_idx].params, out_wav=wav, sr=sr, duration_s=duration_s)
             wavs.append(wav)
 
-        updated_weights, ab_accumulated_rows, ab_accumulated_items = run_ab_session(
+        updated_payload, ab_accumulated_rows, ab_accumulated_items = run_ab_session(
             wavs=wavs,
             scorer=scorer,
             n_pairs=ab_pairs,
@@ -274,10 +528,15 @@ def phase1_random_sampling(
             accumulated_rows=ab_accumulated_rows,
             accumulated_items=ab_accumulated_items,
         )
-        if updated_weights is None:
+        if updated_payload is None:
             continue
 
-        scorer = UnpleasantnessScorer(weights=updated_weights)
+        payload_weights = updated_payload.get("weights") if isinstance(updated_payload, dict) else None
+        payload_model = updated_payload.get("preference_model") if isinstance(updated_payload, dict) else None
+        scorer = UnpleasantnessScorer(
+            weights=payload_weights if isinstance(payload_weights, dict) else scorer.weights,
+            preference_model=payload_model if isinstance(payload_model, dict) else None,
+        )
         results = [evaluate_params(r.params, sr=sr, duration_s=duration_s, scorer=scorer) for r in results]
         results.sort(key=lambda x: x.score, reverse=True)
         best = results[0].score if results else 0.0
@@ -296,9 +555,19 @@ def iter_param_alternatives(group: str, key: str, current: Any) -> list[Any]:
         "inharmonic": INHARMONIC_SPACE,
         "beating": BEATING_SPACE,
         "noise_shaped": NOISE_SHAPED_SPACE,
+        "scream_chaos": SCREAM_CHAOS_SPACE,
+        "dread_swell": DREAD_SWELL_SPACE,
+        "shepard_ascent": SHEPARD_ASCENT_SPACE,
+        "pulse_panic": PULSE_PANIC_SPACE,
+        "doom_throb": DOOM_THROB_SPACE,
+        "wobble_drift": WOBBLE_DRIFT_SPACE,
+        "uncanny_morph": UNCANNY_MORPH_SPACE,
         "global": GLOBAL_SPACE,
     }
-    values = space_map[group][key]
+    group_space = space_map.get(group)
+    if group_space is None or key not in group_space:
+        return []
+    values = group_space[key]
     def _neq(a: Any, b: Any) -> bool:
         """Safe inequality: handles list/numpy values."""
         try:
@@ -320,14 +589,32 @@ def hill_climb_one(
 ) -> EvalResult:
     """Coordinate-descent hill climb from one starting candidate."""
     current = EvalResult(start.score, copy.deepcopy(start.params), copy.deepcopy(start.features))
-    groups_order = ["rough", "stickslip", "fm_instab", "inharmonic", "beating", "noise_shaped", "global"]
+    groups_order = [
+        "rough",
+        "stickslip",
+        "fm_instab",
+        "inharmonic",
+        "beating",
+        "noise_shaped",
+        "scream_chaos",
+        "dread_swell",
+        "shepard_ascent",
+        "pulse_panic",
+        "doom_throb",
+        "wobble_drift",
+        "uncanny_morph",
+        "global",
+    ]
 
     for it in range(iters):
         improved_any = False
         for group in groups_order:
-            for key in current.params[group].keys():
+            group_params = current.params.get(group)
+            if not isinstance(group_params, dict):
+                continue
+            for key in list(group_params.keys()):
                 best_local = current
-                cur_val = current.params[group][key]
+                cur_val = group_params[key]
                 for alt in iter_param_alternatives(group, key, cur_val):
                     trial_params = copy.deepcopy(current.params)
                     trial_params[group][key] = alt
@@ -359,6 +646,20 @@ def render_result(params: dict[str, Any], out_wav: Path, sr: int, duration_s: fl
         global_params=params["global"],
     )
     sf.write(str(out_wav), signal, samplerate=sr)
+
+
+def write_params_sidecar(params: dict[str, Any], out_wav: Path, sr: int, duration_s: float) -> Path:
+    """Write analysis sidecar with full layer/global metadata next to a rendered wav."""
+    sidecar = out_wav.with_name(f"{out_wav.stem}.params.json")
+    payload = {
+        "duration_s": float(duration_s),
+        "sample_rate": int(sr),
+        "global": to_serializable(params.get("global", {})),
+        "layers": to_serializable(build_layers(params)),
+    }
+    with sidecar.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, sort_keys=True)
+    return sidecar
 
 
 def build_result_preset(
@@ -399,6 +700,24 @@ def parse_args() -> argparse.Namespace:
         help="Parallel workers for phase 1.",
     )
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
+    parser.add_argument(
+        "--temporal-min-active",
+        type=int,
+        default=0,
+        help="Minimum active temporal layers per sampled candidate.",
+    )
+    parser.add_argument(
+        "--temporal-max-active",
+        type=int,
+        default=3,
+        help="Maximum active temporal layers per sampled candidate.",
+    )
+    parser.add_argument(
+        "--temporal-activation-p",
+        type=float,
+        default=0.45,
+        help="Independent activation probability for each temporal layer before min/max constraints.",
+    )
     parser.add_argument("--no-save", action="store_true", help="Skip saving audio; save JSON report only.")
     parser.add_argument(
         "--ab-interval",
@@ -435,6 +754,9 @@ def main() -> None:
         duration_s=args.duration,
         workers=max(1, args.workers),
         seed=args.seed,
+        temporal_min_active=args.temporal_min_active,
+        temporal_max_active=args.temporal_max_active,
+        temporal_activation_p=args.temporal_activation_p,
         ab_interval=args.ab_interval,
         ab_pairs=args.ab_pairs,
         ab_no_play=args.ab_no_play,
@@ -490,6 +812,9 @@ def main() -> None:
             "out_dir": str(out_dir),
             "workers": args.workers,
             "seed": args.seed,
+            "temporal_min_active": args.temporal_min_active,
+            "temporal_max_active": args.temporal_max_active,
+            "temporal_activation_p": args.temporal_activation_p,
             "no_save": args.no_save,
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),

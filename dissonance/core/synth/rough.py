@@ -19,7 +19,6 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     partial_spread_bark = float(params.get("partial_spread_bark", 0.25))
     am_rate_hz = float(params.get("am_rate_hz", 70.0))
     am_depth = float(params.get("am_depth", 0.9))
-    gain_db = float(params.get("gain_db", -6.0))
 
     n_partials = max(1, n_partials)
     carrier_bark = float(hz_to_bark(carrier_hz))
@@ -41,8 +40,4 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     env = smooth_am_env(n=n, sr=sr, rate_hz=am_rate_hz, depth=am_depth)
     y *= env
 
-    y *= np.float32(10.0 ** (gain_db / 20.0))
-    peak = float(np.max(np.abs(y)))
-    if peak > 0.0:
-        y /= np.float32(peak)
     return y.astype(np.float32)

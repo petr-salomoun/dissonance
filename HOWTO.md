@@ -21,10 +21,10 @@ dissonance gen --out my_sound.wav
 ```
 
 Options:
-- `--out PATH` — output WAV path (default: `out.wav`)
+- `--out PATH` — output WAV path (default: `generated.wav`)
 - `--preset PATH` — load parameters from a JSON preset file
-- `--duration SECS` — duration in seconds (default: 5.0)
-- `--sr HZ` — sample rate (default: 44100)
+- `--duration SECS` — duration in seconds (default: 4.0)
+- `--sr HZ` — sample rate (default: 48000)
 
 ### Score a file
 
@@ -53,10 +53,15 @@ dissonance sweep --samples 200 --top-k 5 --hill-climb-iters 5 --out-dir ./result
 ```
 
 Options:
-- `--samples N` — number of random candidates to evaluate in phase 1 (default: 100)
+- `--samples N` — number of random candidates to evaluate in phase 1 (default: 200)
 - `--top-k K` — how many top candidates to hill-climb from in phase 2 (default: 5)
-- `--hill-climb-iters N` — hill-climb iterations per seed (default: 5)
+- `--hill-climb-iters N` — hill-climb iterations per seed (default: 3)
+- `--duration SECS` — evaluation duration in seconds (default: 2.0)
+- `--sr HZ` — evaluation sample rate (default: 22050)
+- `--temporal-min-active N` / `--temporal-max-active N` — active temporal-layer window (defaults: 0 / 3)
+- `--temporal-activation-p P` — per-layer activation probability before min/max constraints (default: 0.45)
 - `--out-dir PATH` — where to save results (WAVs + JSON presets)
+- `--seed N` — reproducible sweep seed (default: 42)
 
 Each result is saved as a `.wav` + `.json` pair so any result can be regenerated exactly:
 
@@ -75,9 +80,8 @@ The scoring weights can be calibrated from your own listening preferences.
 Run a pairwise listening test directly:
 
 ```bash
-dissonance sweep --samples 200 --out-dir ./results
-# then:
-python abtool.py --dir results --pairs 10
+dissonance ab-candidates --seed 42 --out-dir ./ab_candidates
+python abtool.py --wavs ./ab_candidates/*.wav --pairs 10 --seed 42 --no-play
 ```
 
 You will hear each pair played back-to-back (A then B) and be prompted to pick which one sounds worse. After the session, calibrated weights are printed and can be passed back to the scorer.
@@ -87,7 +91,7 @@ You will hear each pair played back-to-back (A then B) and be prompted to pick w
 The sweep command can pause every N samples, run a mini listening session on the current top candidates, update the scoring weights, and continue. This lets the optimizer adapt to your preferences as it runs:
 
 ```bash
-dissonance sweep --samples 200 --ab-interval 20 --ab-pairs 6 --out-dir ./results
+dissonance sweep --seed 42 --ab-interval 20 --ab-pairs 6 --ab-no-play
 ```
 
 Options:
@@ -100,7 +104,10 @@ Options:
 1. Your pairwise verdicts are fit to a **Bradley-Terry model**, assigning a latent unpleasantness strength to each candidate.
 2. Those strengths are regressed onto the acoustic feature matrix using **ridge regularization** (prevents weight collapse to a single feature).
 3. The result is **blended with the default weights** (prior blend), so one noisy session doesn't destabilize everything.
-4. All comparisons **accumulate** across rounds, so weights converge over time.
+4. Feature coverage is tracked explicitly with `identified`, `pending_contrast`, and `pending_variance` states.
+5. All comparisons **accumulate** across rounds, so weights converge over time.
+
+The standalone `abtool.py` CLI expects `--wavs`, not `--dir`.
 
 ---
 

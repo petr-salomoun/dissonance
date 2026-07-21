@@ -14,6 +14,7 @@ import numpy as np
 import soundfile as sf
 
 from dissonance.analysis.features import compute_features
+from dissonance.ab_candidates import generate_ab_candidates
 from dissonance.analysis.scorer import UnpleasantnessScorer
 from dissonance.io.presets import PRESET_DEFAULT_GEN, get_preset
 from dissonance.io.render import render_from_params
@@ -99,11 +100,30 @@ def _cmd_sweep(args: argparse.Namespace) -> None:
         "--out-dir", str(args.out_dir),
         "--workers", str(args.workers),
         "--seed", str(args.seed),
+        "--temporal-min-active", str(args.temporal_min_active),
+        "--temporal-max-active", str(args.temporal_max_active),
+        "--temporal-activation-p", str(args.temporal_activation_p),
+        "--ab-interval", str(args.ab_interval),
+        "--ab-pairs", str(args.ab_pairs),
     ]
     if getattr(args, "no_save", False):
         cmd.append("--no-save")
+    if getattr(args, "ab_no_play", False):
+        cmd.append("--ab-no-play")
     result = subprocess.run(cmd)
     sys.exit(result.returncode)
+
+
+def _cmd_ab_candidates(args: argparse.Namespace) -> None:
+    """Generate deterministic A/B calibration candidates that isolate temporal synth features."""
+    rendered = generate_ab_candidates(
+        out_dir=args.out_dir,
+        duration_s=args.duration,
+        sample_rate=args.sr,
+        seed=args.seed,
+        repeats=args.repeats,
+    )
+    print(f"Generated {len(rendered)} files in {Path(args.out_dir).resolve()}")
 
 
 
@@ -140,8 +160,25 @@ def _build_parser() -> argparse.ArgumentParser:
     sweep.add_argument("--out-dir", type=str, default="./sweep_results", dest="out_dir")
     sweep.add_argument("--workers", type=int, default=min((os.cpu_count() or 1), 4))
     sweep.add_argument("--seed", type=int, default=42)
+    sweep.add_argument("--temporal-min-active", type=int, default=0, dest="temporal_min_active")
+    sweep.add_argument("--temporal-max-active", type=int, default=3, dest="temporal_max_active")
+    sweep.add_argument("--temporal-activation-p", type=float, default=0.45, dest="temporal_activation_p")
+    sweep.add_argument("--ab-interval", type=int, default=0, dest="ab_interval")
+    sweep.add_argument("--ab-pairs", type=int, default=6, dest="ab_pairs")
+    sweep.add_argument("--ab-no-play", action="store_true", dest="ab_no_play")
     sweep.add_argument("--no-save", action="store_true", dest="no_save")
     sweep.set_defaults(func=_cmd_sweep)
+
+    ab_candidates = subparsers.add_parser(
+        "ab-candidates",
+        help="Generate balanced A/B WAV+sidecar candidates isolating one temporal synth feature at a time",
+    )
+    ab_candidates.add_argument("--out-dir", type=str, default="./ab_candidates", dest="out_dir")
+    ab_candidates.add_argument("--duration", type=float, default=2.0)
+    ab_candidates.add_argument("--sr", type=int, default=22050)
+    ab_candidates.add_argument("--seed", type=int, default=42)
+    ab_candidates.add_argument("--repeats", type=int, default=1)
+    ab_candidates.set_defaults(func=_cmd_ab_candidates)
 
     # AB tool removed
 

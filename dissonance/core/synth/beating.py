@@ -17,7 +17,6 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     beat_jitter = float(np.clip(params.get("beat_jitter", 0.3), 0.0, 1.0))
     harmonics = max(1, int(params.get("harmonics", 3)))
     harmonic_rolloff = float(np.clip(params.get("harmonic_rolloff", 0.0), 0.0, 1.0))
-    gain_db = float(params.get("gain_db", -6.0))
 
     t = np.arange(n, dtype=np.float32) / np.float32(sr)
     nyq = 0.5 * float(sr) - 1.0
@@ -36,8 +35,4 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
             amp = harmonic_rolloff ** (k - 1)
             y += np.float32(amp) * np.sin(2.0 * np.pi * np.float32(fk) * t).astype(np.float32)
 
-    y *= np.float32(10.0 ** (gain_db / 20.0))
-    peak = float(np.max(np.abs(y)))
-    if peak > 0.0:
-        y /= np.float32(peak)
     return y.astype(np.float32)

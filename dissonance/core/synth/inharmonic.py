@@ -16,7 +16,6 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     inharmonicity_B = float(np.clip(params.get("inharmonicity_B", 0.04), 0.0, 0.3))
     random_detune = float(np.clip(params.get("random_detune", 0.3), 0.0, 1.0))
     decay_rate = float(params.get("decay_rate", 3.0))
-    gain_db = float(params.get("gain_db", -6.0))
 
     t = np.arange(n, dtype=np.float32) / np.float32(sr)
     nyq = 0.5 * float(sr) - 1.0
@@ -35,8 +34,4 @@ def render(params: dict, sr: int, n: int) -> np.ndarray:
     for amp, f_hz in zip(amps, freqs):
         y += amp * np.sin(2.0 * np.pi * f_hz * t).astype(np.float32)
 
-    y *= np.float32(10.0 ** (gain_db / 20.0))
-    peak = float(np.max(np.abs(y)))
-    if peak > 0.0:
-        y /= np.float32(peak)
     return y.astype(np.float32)
