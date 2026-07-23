@@ -4,7 +4,7 @@ Psychoacoustics has well-studied principles for what makes sound grate on us. Th
 
 ---
 
-## What makes sound unpleasant?
+## Tonal
 
 The literature points to a handful of perceptual properties — roughness, sharpness, inharmonicity, tonal instability. Each is a distinct mechanism. We implement each as its own synthesis layer so we can study and combine them independently.
 
@@ -16,78 +16,6 @@ When two frequency components sit close together inside a single *critical band*
 
 <audio controls src="examples/01_roughness.wav"></audio><br>
 ▶ [examples/01_roughness.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/01_roughness.wav) — unpleasantness score: **0.99**
-
----
-
-## Showcase: latest pipeline assets
-
-The curated showcase under `examples/showcase` reflects the current pipeline. It adds **temporal layers** on top of the existing tonal layers above (`rough`, `stickslip`, `fm_instab`, `inharmonic`, `beating`, `noise_shaped`). The temporal layers are a separate control axis: they shape motion over time rather than the base tonal texture.
-
-Listen at low volume.
-
-### Temporal-layer components
-
-Each item below is a single temporal layer rendered in isolation, with its manifest score from the current heuristic scorer.
-
-- **scream_chaos** — biphonic, alarm-like instability that breaks tonal lock-in; score **0.11952782783260028**
-  <audio controls src="examples/showcase/audio/component_temporal_01_scream_chaos.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_01_scream_chaos.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_01_scream_chaos.wav)
-
-- **dread_swell** — slow rising tension that increases pressure without adding a new pitch gesture; score **0.8768406060329111**
-  <audio controls src="examples/showcase/audio/component_temporal_02_dread_swell.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_02_dread_swell.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_02_dread_swell.wav)
-
-- **shepard_ascent** — endless-rising illusion that keeps motion suspended in a loop; score **0.5425853953022132**
-  <audio controls src="examples/showcase/audio/component_temporal_03_shepard_ascent.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_03_shepard_ascent.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_03_shepard_ascent.wav)
-
-- **pulse_panic** — faster pulse-driven agitation that reads as frantic motion; score **0.901218487525885**
-  <audio controls src="examples/showcase/audio/component_temporal_04_pulse_panic.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_04_pulse_panic.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_04_pulse_panic.wav)
-
-- **doom_throb** — low, detuned throbbing that pulls the mix downward; score **0.042395873657606276**
-  <audio controls src="examples/showcase/audio/component_temporal_05_doom_throb.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_05_doom_throb.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_05_doom_throb.wav)
-
-- **wobble_drift** — slow detune drift that destabilizes pitch center over time; score **0.06944041256695596**
-  <audio controls src="examples/showcase/audio/component_temporal_06_wobble_drift.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_06_wobble_drift.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_06_wobble_drift.wav)
-
-- **uncanny_morph** — morphing inharmonic change that shifts timbre into an uncanny register; score **0.24429722300451479**
-  <audio controls src="examples/showcase/audio/component_temporal_07_uncanny_morph.wav"></audio><br>
-  ▶ [examples/showcase/audio/component_temporal_07_uncanny_morph.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_07_uncanny_morph.wav)
-
-### Composite examples
-
-These composites combine all legacy tonal types (`rough`, `stickslip`, `fm_instab`, `inharmonic`, `beating`, `noise_shaped`) with named temporal layers. The score shown is the current heuristic scorer's output; it is not a universal human unpleasantness claim.
-
-- **predator_clock** — legacy tonal stack + `scream_chaos`, `pulse_panic`, `uncanny_morph`; score **0.8782608064851498**
-  <audio controls src="examples/showcase/audio/composite_01_predator_clock.wav"></audio><br>
-  ▶ [examples/showcase/audio/composite_01_predator_clock.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/composite_01_predator_clock.wav)
-  ▶ [examples/showcase/presets/composite_01_predator_clock.json](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/presets/composite_01_predator_clock.json)
-
-- **escalating_machine** — legacy tonal stack + `dread_swell`, `shepard_ascent`, `doom_throb`, `wobble_drift`; score **0.8859187291227535**
-  <audio controls src="examples/showcase/audio/composite_02_escalating_machine.wav"></audio><br>
-  ▶ [examples/showcase/audio/composite_02_escalating_machine.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/composite_02_escalating_machine.wav)
-  ▶ [examples/showcase/presets/composite_02_escalating_machine.json](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/presets/composite_02_escalating_machine.json)
-
-### A/B-ready generated candidate pairs
-
-These are the current pipeline's A/B-ready generated candidate pairs. The persisted `.params.json` sidecars and `examples/showcase/manifest.json` make them reproducible.
-
-- **Pair 01 — control vs all-temporal**
-  - control: [examples/showcase/audio/ab_pair01_A_legacy_control.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair01_A_legacy_control.wav)
-  - all-temporal: [examples/showcase/audio/ab_pair01_B_legacy_plus_all_temporal.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair01_B_legacy_plus_all_temporal.wav)
-
-- **Pair 02 — predator-clock vs escalating-machine**
-  - predator-clock: [examples/showcase/audio/ab_pair02_A_predator_clock.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair02_A_predator_clock.wav)
-  - escalating-machine: [examples/showcase/audio/ab_pair02_B_escalating_machine.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair02_B_escalating_machine.wav)
-
-Reproduce the showcase with:
-
-```bash
-python scripts/generate_showcase_examples.py
-```
 
 ---
 
@@ -142,6 +70,78 @@ Broadband noise becomes nastier when focused on the most sensitive hearing range
 
 <audio controls src="examples/07_noise_shaped.wav"></audio><br>
 ▶ [examples/07_noise_shaped.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/07_noise_shaped.wav) — unpleasantness score: **0.98**
+
+---
+
+## Temporal
+
+The curated showcase under `examples/showcase` reflects the current pipeline. It adds temporal layers on top of the tonal layers above. The temporal layers are a separate control axis: they shape motion over time rather than the base tonal texture.
+
+Listen at low volume.
+
+Each item below is a single temporal layer rendered in isolation, with its manifest score from the current heuristic scorer.
+
+- **scream_chaos** — biphonic, alarm-like instability that breaks tonal lock-in; score **0.11952782783260028**
+  <audio controls src="examples/showcase/audio/component_temporal_01_scream_chaos.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_01_scream_chaos.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_01_scream_chaos.wav)
+
+- **dread_swell** — slow rising tension that increases pressure without adding a new pitch gesture; score **0.8768406060329111**
+  <audio controls src="examples/showcase/audio/component_temporal_02_dread_swell.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_02_dread_swell.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_02_dread_swell.wav)
+
+- **shepard_ascent** — endless-rising illusion that keeps motion suspended in a loop; score **0.5425853953022132**
+  <audio controls src="examples/showcase/audio/component_temporal_03_shepard_ascent.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_03_shepard_ascent.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_03_shepard_ascent.wav)
+
+- **pulse_panic** — faster pulse-driven agitation that reads as frantic motion; score **0.901218487525885**
+  <audio controls src="examples/showcase/audio/component_temporal_04_pulse_panic.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_04_pulse_panic.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_04_pulse_panic.wav)
+
+- **doom_throb** — low, detuned throbbing that pulls the mix downward; score **0.042395873657606276**
+  <audio controls src="examples/showcase/audio/component_temporal_05_doom_throb.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_05_doom_throb.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_05_doom_throb.wav)
+
+- **wobble_drift** — slow detune drift that destabilizes pitch center over time; score **0.06944041256695596**
+  <audio controls src="examples/showcase/audio/component_temporal_06_wobble_drift.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_06_wobble_drift.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_06_wobble_drift.wav)
+
+- **uncanny_morph** — morphing inharmonic change that shifts timbre into an uncanny register; score **0.24429722300451479**
+  <audio controls src="examples/showcase/audio/component_temporal_07_uncanny_morph.wav"></audio><br>
+  ▶ [examples/showcase/audio/component_temporal_07_uncanny_morph.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/component_temporal_07_uncanny_morph.wav)
+
+---
+
+## Showcase: latest pipeline assets
+
+These composites combine the tonal layers above (`rough`, `stickslip`, `fm_instab`, `inharmonic`, `beating`, `noise_shaped`) with named temporal layers. The score shown is the current heuristic scorer's output; it is not a universal human unpleasantness claim.
+
+- **predator_clock** — legacy tonal stack + `scream_chaos`, `pulse_panic`, `uncanny_morph`; score **0.8782608064851498**
+  <audio controls src="examples/showcase/audio/composite_01_predator_clock.wav"></audio><br>
+  ▶ [examples/showcase/audio/composite_01_predator_clock.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/composite_01_predator_clock.wav)
+  ▶ [examples/showcase/presets/composite_01_predator_clock.json](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/presets/composite_01_predator_clock.json)
+
+- **escalating_machine** — legacy tonal stack + `dread_swell`, `shepard_ascent`, `doom_throb`, `wobble_drift`; score **0.8859187291227535**
+  <audio controls src="examples/showcase/audio/composite_02_escalating_machine.wav"></audio><br>
+  ▶ [examples/showcase/audio/composite_02_escalating_machine.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/composite_02_escalating_machine.wav)
+  ▶ [examples/showcase/presets/composite_02_escalating_machine.json](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/presets/composite_02_escalating_machine.json)
+
+### A/B-ready generated candidate pairs
+
+These are the current pipeline's A/B-ready generated candidate pairs. The persisted `.params.json` sidecars and `examples/showcase/manifest.json` make them reproducible.
+
+- **Pair 01 — control vs all-temporal**
+  - control: [examples/showcase/audio/ab_pair01_A_legacy_control.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair01_A_legacy_control.wav)
+  - all-temporal: [examples/showcase/audio/ab_pair01_B_legacy_plus_all_temporal.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair01_B_legacy_plus_all_temporal.wav)
+
+- **Pair 02 — predator-clock vs escalating-machine**
+  - predator-clock: [examples/showcase/audio/ab_pair02_A_predator_clock.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair02_A_predator_clock.wav)
+  - escalating-machine: [examples/showcase/audio/ab_pair02_B_escalating_machine.wav](https://github.com/petr-salomoun/dissonance/raw/refs/heads/main/examples/showcase/audio/ab_pair02_B_escalating_machine.wav)
+
+Reproduce the showcase with:
+
+```bash
+python scripts/generate_showcase_examples.py
+```
 
 ---
 
