@@ -1,0 +1,20 @@
+{
+  "duration_s": 2.4,
+  "global": {
+    "highpass_hz": 120.0,
+    "hump_2_4khz_db": 7.0
+  },
+  "layers": [
+    {
+      "biphonation_gain": 0.35,
+      "biphonation_ratio": 1.67,
+      "carrier_hz": 900.0,
+      "chaos_amount": 0.85,
+      "gain_db": -9.0,
+      "pitch_jump_rate_hz": 0.9,
+      "subharmonic_gain": 0.55,
+      "type": "scream_chaos"
+    }
+  ],
+  "sample_rate": 22050
+}

@@ -1,0 +1,18 @@
+{
+  "duration_s": 2.8,
+  "global": {
+    "highpass_hz": 20.0,
+    "hump_2_4khz_db": 5.0
+  },
+  "layers": [
+    {
+      "am_rate_hz": 0.28,
+      "center_hz": 32.0,
+      "detune_hz_end": 5.2,
+      "detune_hz_start": 0.3,
+      "gain_db": -8.0,
+      "type": "doom_throb"
+    }
+  ],
+  "sample_rate": 22050
+}

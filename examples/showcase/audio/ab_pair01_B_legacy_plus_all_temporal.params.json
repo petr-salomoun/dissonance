@@ -1,0 +1,130 @@
+{
+  "_ab_candidate": {
+    "contrast": "legacy_vs_legacy_plus_all_temporal",
+    "pair_id": 1,
+    "role": "B_variant"
+  },
+  "duration_s": 2.6,
+  "global": {
+    "highpass_hz": 80.0,
+    "hump_2_4khz_db": 8.0
+  },
+  "layers": [
+    {
+      "am_depth": 0.95,
+      "am_rate_hz": 80.0,
+      "carrier_hz": 3000.0,
+      "gain_db": -7.0,
+      "n_partials": 12,
+      "partial_spread_bark": 0.45,
+      "type": "rough"
+    },
+    {
+      "gain_db": -4.5,
+      "impulse_decay_ms": 1.4,
+      "ioi_jitter": 0.75,
+      "ioi_mean_ms": 4.5,
+      "resonance_hz": [
+        2200.0,
+        3150.0,
+        4200.0
+      ],
+      "type": "stickslip"
+    },
+    {
+      "carrier_hz": 3400.0,
+      "gain_db": -10.0,
+      "mod_chaos": 0.9,
+      "mod_index": 12.0,
+      "mod_rate_hz": 16.0,
+      "type": "fm_instab"
+    },
+    {
+      "base_hz": 220.0,
+      "gain_db": -11.0,
+      "inharmonicity_B": 0.12,
+      "n_partials": 16,
+      "random_detune": 0.7,
+      "type": "inharmonic"
+    },
+    {
+      "base_hz": 220.0,
+      "beat_jitter": 0.6,
+      "beat_rate_hz": 10.0,
+      "gain_db": -8.0,
+      "n_beaters": 5,
+      "type": "beating"
+    },
+    {
+      "bandwidth_hz": 2200.0,
+      "center_hz": 3600.0,
+      "gain_db": -12.0,
+      "modulation_depth": 0.85,
+      "modulation_rate_hz": 70.0,
+      "type": "noise_shaped"
+    },
+    {
+      "biphonation_gain": 0.25,
+      "biphonation_ratio": 1.52,
+      "carrier_hz": 700.0,
+      "chaos_amount": 0.7,
+      "gain_db": -10.0,
+      "pitch_jump_rate_hz": 0.6,
+      "subharmonic_gain": 0.5,
+      "type": "scream_chaos"
+    },
+    {
+      "end_hz": 1700.0,
+      "gain_db": -10.0,
+      "loudness_rise": true,
+      "rise_shape": "exponential",
+      "roughness_rise": true,
+      "start_hz": 140.0,
+      "type": "dread_swell"
+    },
+    {
+      "gain_db": -11.0,
+      "n_voices": 10,
+      "octave_spread": 4.5,
+      "rise_rate_hz_per_s": 0.55,
+      "roughness_am_hz": 30.0,
+      "type": "shepard_ascent"
+    },
+    {
+      "acceleration": "exponential",
+      "burst_decay_ms": 10.0,
+      "end_rate_hz": 9.0,
+      "gain_db": -10.0,
+      "roughness_am_hz": 70.0,
+      "start_rate_hz": 1.0,
+      "type": "pulse_panic"
+    },
+    {
+      "am_rate_hz": 0.2,
+      "center_hz": 30.0,
+      "detune_hz_end": 4.2,
+      "detune_hz_start": 0.4,
+      "gain_db": -9.5,
+      "type": "doom_throb"
+    },
+    {
+      "base_hz": 200.0,
+      "detune_end_hz": 18.0,
+      "detune_start_hz": 0.4,
+      "drift_shape": "linear",
+      "gain_db": -10.0,
+      "n_harmonics": 4,
+      "type": "wobble_drift"
+    },
+    {
+      "base_hz": 190.0,
+      "formant_sweep": true,
+      "gain_db": -11.0,
+      "inharmonicity_end": 0.3,
+      "inharmonicity_start": 0.01,
+      "n_partials": 12,
+      "type": "uncanny_morph"
+    }
+  ],
+  "sample_rate": 22050
+}

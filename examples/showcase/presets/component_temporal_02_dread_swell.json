@@ -1,0 +1,19 @@
+{
+  "duration_s": 2.8,
+  "global": {
+    "highpass_hz": 60.0,
+    "hump_2_4khz_db": 8.0
+  },
+  "layers": [
+    {
+      "end_hz": 1800.0,
+      "gain_db": -10.0,
+      "loudness_rise": true,
+      "rise_shape": "exponential",
+      "roughness_rise": true,
+      "start_hz": 140.0,
+      "type": "dread_swell"
+    }
+  ],
+  "sample_rate": 22050
+}

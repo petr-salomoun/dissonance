@@ -1,0 +1,19 @@
+{
+  "duration_s": 2.5,
+  "global": {
+    "highpass_hz": 80.0,
+    "hump_2_4khz_db": 7.0
+  },
+  "layers": [
+    {
+      "base_hz": 260.0,
+      "detune_end_hz": 24.0,
+      "detune_start_hz": 0.2,
+      "drift_shape": "exponential",
+      "gain_db": -9.0,
+      "n_harmonics": 6,
+      "type": "wobble_drift"
+    }
+  ],
+  "sample_rate": 22050
+}

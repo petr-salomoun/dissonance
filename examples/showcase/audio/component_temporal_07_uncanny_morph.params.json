@@ -1,0 +1,19 @@
+{
+  "duration_s": 2.6,
+  "global": {
+    "highpass_hz": 70.0,
+    "hump_2_4khz_db": 7.5
+  },
+  "layers": [
+    {
+      "base_hz": 210.0,
+      "formant_sweep": true,
+      "gain_db": -10.0,
+      "inharmonicity_end": 0.38,
+      "inharmonicity_start": 0.01,
+      "n_partials": 14,
+      "type": "uncanny_morph"
+    }
+  ],
+  "sample_rate": 22050
+}

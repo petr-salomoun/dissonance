@@ -1,0 +1,96 @@
+{
+  "_ab_candidate": {
+    "contrast": "composite_01_vs_composite_02",
+    "pair_id": 2,
+    "role": "A_variant"
+  },
+  "duration_s": 2.6,
+  "global": {
+    "highpass_hz": 80.0,
+    "hump_2_4khz_db": 8.0
+  },
+  "layers": [
+    {
+      "am_depth": 0.95,
+      "am_rate_hz": 80.0,
+      "carrier_hz": 3000.0,
+      "gain_db": -7.0,
+      "n_partials": 12,
+      "partial_spread_bark": 0.45,
+      "type": "rough"
+    },
+    {
+      "gain_db": -4.5,
+      "impulse_decay_ms": 1.4,
+      "ioi_jitter": 0.75,
+      "ioi_mean_ms": 4.5,
+      "resonance_hz": [
+        2200.0,
+        3150.0,
+        4200.0
+      ],
+      "type": "stickslip"
+    },
+    {
+      "carrier_hz": 3400.0,
+      "gain_db": -10.0,
+      "mod_chaos": 0.9,
+      "mod_index": 12.0,
+      "mod_rate_hz": 16.0,
+      "type": "fm_instab"
+    },
+    {
+      "base_hz": 220.0,
+      "gain_db": -11.0,
+      "inharmonicity_B": 0.12,
+      "n_partials": 16,
+      "random_detune": 0.7,
+      "type": "inharmonic"
+    },
+    {
+      "base_hz": 220.0,
+      "beat_jitter": 0.6,
+      "beat_rate_hz": 10.0,
+      "gain_db": -8.0,
+      "n_beaters": 5,
+      "type": "beating"
+    },
+    {
+      "bandwidth_hz": 2200.0,
+      "center_hz": 3600.0,
+      "gain_db": -12.0,
+      "modulation_depth": 0.85,
+      "modulation_rate_hz": 70.0,
+      "type": "noise_shaped"
+    },
+    {
+      "biphonation_gain": 0.25,
+      "biphonation_ratio": 1.52,
+      "carrier_hz": 720.0,
+      "chaos_amount": 0.72,
+      "gain_db": -10.0,
+      "pitch_jump_rate_hz": 0.7,
+      "subharmonic_gain": 0.45,
+      "type": "scream_chaos"
+    },
+    {
+      "acceleration": "exponential",
+      "burst_decay_ms": 10.0,
+      "end_rate_hz": 10.0,
+      "gain_db": -10.0,
+      "roughness_am_hz": 65.0,
+      "start_rate_hz": 0.7,
+      "type": "pulse_panic"
+    },
+    {
+      "base_hz": 180.0,
+      "formant_sweep": true,
+      "gain_db": -11.0,
+      "inharmonicity_end": 0.28,
+      "inharmonicity_start": 0.02,
+      "n_partials": 12,
+      "type": "uncanny_morph"
+    }
+  ],
+  "sample_rate": 22050
+}
